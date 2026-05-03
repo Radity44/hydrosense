@@ -1,30 +1,43 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:hydrosense/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('SplashScreen tampil dengan benar', (WidgetTester tester) async {
+    await tester.pumpWidget(const HydroSenseApp());
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // Cek teks HydroSense muncul di splash
+    expect(find.text('HydroSense'), findsOneWidget);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    // Cek tombol Daftar ada
+    expect(find.text('Daftar'), findsOneWidget);
+  });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  testWidgets('Tombol Daftar navigasi ke LoginPage', (WidgetTester tester) async {
+    await tester.pumpWidget(const HydroSenseApp());
+
+    // Tap tombol Daftar
+    await tester.tap(find.text('Daftar'));
+    await tester.pumpAndSettle();
+
+    // Cek halaman login muncul
+    expect(find.text('Masuk'), findsOneWidget);
+    expect(find.text('Lupa password?'), findsOneWidget);
+  });
+
+  testWidgets('Tombol Masuk navigasi ke Dashboard tanpa validasi',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(const HydroSenseApp());
+
+    // Ke halaman login dulu
+    await tester.tap(find.text('Daftar'));
+    await tester.pumpAndSettle();
+
+    // Tap tombol Masuk langsung (tanpa isi field)
+    await tester.tap(find.text('Masuk'));
+    await tester.pumpAndSettle();
+
+    // Cek dashboard muncul
+    expect(find.text('Halo Admin 👋'), findsOneWidget);
+    expect(find.text('Status Real-Time Meja'), findsOneWidget);
   });
 }
