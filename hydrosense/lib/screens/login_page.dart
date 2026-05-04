@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -8,20 +9,67 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _isLoading = false;
+  String? _errorMessage;
 
   @override
   void dispose() {
-    _usernameController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  void _onLoginPressed() {
-    // Langsung navigasi ke dashboard tanpa validasi
-    Navigator.pushReplacementNamed(context, '/dashboard');
+  Future<void> _onLoginPressed() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+      });
+
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text('Login Berhasil', style: TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF1E5C3A))),
+          content: const Text('Selamat datang kembali di HydroSense!'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Tutup dialog
+                Navigator.pushReplacementNamed(context, '/dashboard');
+              },
+              child: const Text('LANJUT', style: TextStyle(color: Color(0xFF1E5C3A), fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      );
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = e.message ?? 'Terjadi kesalahan saat login';
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Terjadi kesalahan tidak terduga';
+      });
+    }
   }
 
   @override
@@ -34,23 +82,6 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 8),
-
-              // Tombol back
-              GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: Container(
-                  width: 36,
-                  height: 36,
-                  alignment: Alignment.center,
-                  child: const Icon(
-                    Icons.chevron_left,
-                    size: 28,
-                    color: Color(0xFF1A1A2E),
-                  ),
-                ),
-              ),
-
               const SizedBox(height: 28),
 
               // Heading
@@ -74,13 +105,13 @@ class _LoginPageState extends State<LoginPage> {
 
               const SizedBox(height: 44),
 
-              // Field Username
+              // Field Email
               _buildInputField(
-                label: 'Username',
-                controller: _usernameController,
-                hint: 'Masukkan username',
+                label: 'Email',
+                controller: _emailController,
+                hint: 'Masukkan email',
                 suffixIcon: const Icon(
-                  Icons.person_outline,
+                  Icons.email_outlined,
                   color: Colors.grey,
                   size: 20,
                 ),
@@ -114,7 +145,7 @@ class _LoginPageState extends State<LoginPage> {
               Align(
                 alignment: Alignment.centerRight,
                 child: GestureDetector(
-                  onTap: () {},
+                  onTap: () => Navigator.pushNamed(context, '/forgot_password'),
                   child: const Text(
                     'Lupa password?',
                     style: TextStyle(
@@ -126,15 +157,39 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
 
-              const SizedBox(height: 40),
+              if (_errorMessage != null) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEE2E2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.error_outline, color: Color(0xFFDC2626), size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _errorMessage!,
+                          style: const TextStyle(color: Color(0xFFDC2626), fontSize: 13),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
+              const SizedBox(height: 24),
 
               // Tombol Masuk
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _onLoginPressed,
+                  onPressed: _isLoading ? null : _onLoginPressed,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF1E5C3A),
+                    disabledBackgroundColor: const Color(0xFF1E5C3A).withOpacity(0.6),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
@@ -142,12 +197,15 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     elevation: 0,
                   ),
-                  child: const Text(
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                        )
+                      : const Text(
                     'Masuk',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
@@ -168,13 +226,7 @@ class _LoginPageState extends State<LoginPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 12,
-            color: Colors.grey,
-          ),
-        ),
+        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
         const SizedBox(height: 8),
         Row(
           children: [
@@ -182,10 +234,7 @@ class _LoginPageState extends State<LoginPage> {
               child: TextField(
                 controller: controller,
                 obscureText: obscureText,
-                style: const TextStyle(
-                  fontSize: 15,
-                  color: Color(0xFF1A1A2E),
-                ),
+                style: const TextStyle(fontSize: 15, color: Color(0xFF1A1A2E)),
                 decoration: InputDecoration(
                   hintText: hint,
                   hintStyle: TextStyle(color: Colors.grey[400], fontSize: 15),

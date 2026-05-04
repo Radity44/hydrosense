@@ -1,0 +1,36 @@
+{
+  "Monitoring": {
+    "log_001": {
+      "created_at": "",
+      "device_id": "DEV-001",
+      "isNormal": false,
+      "nama": "Meja 1",
+      "nutrisi": 500,
+      "ph": 7,
+      "volume": 80
+    }
+  },
+  "device_treshold": {
+    "setting_001": {
+      "device_id": "DEV-001",
+      "nutrisi_max": 1200,
+      "nutrisi_min": 800,
+      "ph_max": 7.5,
+      "ph_min": 5.5,
+      "volume_min": 20
+    }
+  },
+  "devices": {
+    "DEV-001": {
+      "device_code": "tds_1",
+      "name_device": "TDS Meter",
+      "status": "active"
+    }
+  },
+  "users": {
+    "email": "ridhok@gmaill.com",
+    "full_name": "Ridho Rizky",
+    "password": 123,
+    "user_id": 1
+  }
+}
