@@ -106,7 +106,7 @@ class _SplashScreenState extends State<SplashScreen>
                         elevation: 0,
                       ),
                       child: const Text(
-                        'Daftar',
+                        'Masuk',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
